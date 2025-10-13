@@ -69,6 +69,9 @@ dependencies:
 
   # A package that implements Pull-Down Button from iOS 14 in Flutter. Highly customizable.
   pull_down_button: 0.10.2
+  
+  # Default icons asset for Cupertino widgets based on Apple styled icons
+  cupertino_icons: 1.0.8
 
   # Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.
   share_plus: 12.0.0
