@@ -1,0 +1,8 @@
+flutter_launcher_icons:
+  image_path: "assets/images/icon.png"
+  android: false
+  ios: true
+  
+  # Removes transparency from the iOS icon to avoid App Store validation issues.
+  remove_alpha_ios: true
+  

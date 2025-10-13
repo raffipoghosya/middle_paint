@@ -1,0 +1,22 @@
+{
+    "flutter": {
+        "platforms": {
+            "ios": {
+                "default": {
+                    "projectId": "middlepaint-d6c98",
+                    "appId": "1:521498895183:ios:588b70802787ddad7c1b3a",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "middlepaint-d6c98",
+                    "configurations": {
+                        "ios": "1:521498895183:ios:588b70802787ddad7c1b3a"
+                    }
+                }
+            }
+        }
+    }
+}

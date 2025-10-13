@@ -1,0 +1,5 @@
+flutter_native_splash:
+  # The background color is AppColors.purple (0xFF6A46F9).
+  color: "#6A46F9"
+  # This sets the splash image.
+  image: assets/images/splash.png

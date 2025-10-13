@@ -1,0 +1,97 @@
+name: middle_paint
+description: "A new Flutter project for creative drawing and image editing."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Flutter plugin for Firebase Core, enabling connecting to multiple Firebase apps.
+  firebase_core: 4.1.1
+
+  # A Flutter package to use fonts from fonts.google.com. Supports HTTP fetching, caching, and asset bundling.
+  google_fonts: 6.3.2
+
+  # An SVG rendering and widget library for Flutter, which allows painting and displaying Scalable Vector Graphics 1.1 files.
+  flutter_svg: 2.2.1
+
+  # Render After Effects animations natively on Flutter. This package is a pure Dart implementation of a Lottie player.
+  lottie: 3.3.1
+
+  # This is a model-driven approach to handling form inputs and validations, heavily inspired in Angular Reactive Forms.
+  reactive_forms: 18.1.1
+
+  # Allows to decouple the interface from a concrete implementation and to access the concrete implementation from everywhere in your App
+  get_it: 8.2.0
+
+  # Flutter plugin for Firebase Auth, enabling authentication using passwords
+  firebase_auth: 6.1.0
+
+  # Flutter plugin for Cloud Firestore, a cloud-hosted, noSQL database with live synchronization and offline support
+  cloud_firestore: 6.0.2
+
+  # A Dart package that helps to implement value based equality without needing to explicitly override == and hashCode.
+  equatable: 2.0.7
+
+  # Flutter widgets that make it easy to implement the BLoC
+  flutter_bloc: 9.1.1
+
+  # App Check works alongside other Firebase services to help protect your backend resources from abuse, such as billing fraud or phishing.
+  firebase_app_check: 0.4.1
+
+  # A flutter plugin for adapting screen and font size.Guaranteed to look good on different models
+  flutter_screenutil: 5.9.3
+
+  # Flutter plugin for selecting images from the  iOS image library, and taking new pictures with the camera.
+  image_picker: 1.2.0
+
+  # A flutter plugin for save image to gallery, iOS need to add the following keys to your Info.plist file.
+  image_gallery_saver: 2.0.3
+
+  # Flutter plugin for Firebase Cloud Storage, a powerful, simple, and cost-effective object storage service for iOS.
+  firebase_storage: 13.0.2
+
+  # Flutter library to load and cache network images. Can also be used with placeholder and error widgets.
+  cached_network_image: 3.4.1
+
+  # Flutter plugin for getting commonly used locations on host platform file systems, such as the temp and app data directories.
+  path_provider: 2.1.5
+
+  # A composable, multi-platform, Future-based API for HTTP requests.
+  http: 1.5.0
+
+  # A cross platform plugin for displaying and scheduling local notifications for Flutter applications with the ability to customise for each platform.
+  flutter_local_notifications: 19.4.2
+
+  # A package that implements Pull-Down Button from iOS 14 in Flutter. Highly customizable.
+  pull_down_button: 0.10.2
+
+  # Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.
+  share_plus: 12.0.0
+
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_gen_runner: ^5.10.0
+  build_runner: ^2.4.15
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/ 
+    - assets/vectors/ 
+    - assets/json/ 
+
+flutter_gen:
+  output: lib/gen/
+  line_length: 80
+  assets:
+    enabled: true
+
