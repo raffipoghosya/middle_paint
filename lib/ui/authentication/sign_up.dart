@@ -38,6 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     signUpBloc.add(
       SignUpWithEmailEvent(
         onSuccess: () {
+          signUpBloc.state.signUpForm.clear();
           context.go(HomeScreen.name);
         },
         onError: (errorMessage) {
@@ -55,6 +56,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    signUpBloc.state.signUpForm.clear();
+    super.dispose();
   }
 
   @override
