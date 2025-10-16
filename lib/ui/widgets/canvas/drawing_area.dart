@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:middle_paint/base/colors/app_colors.dart';
 import 'package:middle_paint/core/controllers/drawing_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:middle_paint/core/blocs/canvas_bloc/canvas_bloc.dart';
+import 'package:middle_paint/core/blocs/canvas_bloc/canvas_state.dart';
+import 'package:middle_paint/core/blocs/canvas_bloc/canvas_event.dart';
 import 'dart:io';
 
 class DrawingPainter extends CustomPainter {
@@ -148,7 +152,25 @@ class DrawingArea extends StatelessWidget {
                   onBoundsCalculated?.call(absoluteDrawingBounds);
                 });
 
-                return Stack(
+                return BlocBuilder<CanvasBloc, CanvasState>(
+                  builder: (context, canvasState) {
+                    final isPlacing = canvasState.isPlacingOverlay;
+                    final overlayPath = canvasState.overlayImagePath;
+                    final overlayRect = canvasState.overlayRect ??
+                        (isPlacing
+                            ? Rect.fromLTWH(
+                                drawingBounds.left + drawingBounds.width * 0.25,
+                                drawingBounds.top + drawingBounds.height * 0.25,
+                                drawingBounds.width * 0.5,
+                                drawingBounds.height * 0.5,
+                              )
+                            : null);
+
+                    if (isPlacing && canvasState.overlayRect == null && overlayRect != null) {
+                      context.read<CanvasBloc>().add(UpdateOverlayRectEvent(overlayRect));
+                    }
+
+                    return Stack(
                   children: [
                     if (backgroundImagePath != null)
                       Positioned.fill(
@@ -161,38 +183,63 @@ class DrawingArea extends StatelessWidget {
                         ),
                       ),
 
-                    GestureDetector(
-                      onPanStart: (details) {
-                        final localPosition = details.localPosition;
-                        if (_isPointInBounds(localPosition, drawingBounds)) {
-                          controller.startNewPath(localPosition);
-                        }
-                      },
-                      onPanUpdate: (details) {
-                        final localPosition = details.localPosition;
-
-                        if (controller.paths.isNotEmpty &&
-                            _isPointInBounds(localPosition, drawingBounds)) {
-                          controller.addPointToCurrentPath(localPosition);
-                        }
-                      },
-                      onPanEnd: (_) {
-                        controller.endPath();
-                      },
-                      child: ClipRect(
-                        clipper: _ImageClipper(drawingBounds),
-                        child: ListenableBuilder(
-                          listenable: controller,
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: DrawingPainter(controller),
-                              child: Container(color: Colors.transparent),
-                            );
-                          },
+                    for (final placed in canvasState.placedOverlays)
+                      Positioned(
+                        left: placed.rect.left,
+                        top: placed.rect.top,
+                        width: placed.rect.width,
+                        height: placed.rect.height,
+                        child: Image.file(
+                          File(placed.imagePath),
+                          fit: BoxFit.contain,
                         ),
                       ),
-                    ),
+
+                    if (!isPlacing)
+                      GestureDetector(
+                        onPanStart: (details) {
+                          final localPosition = details.localPosition;
+                          if (_isPointInBounds(localPosition, drawingBounds)) {
+                            controller.startNewPath(localPosition);
+                          }
+                        },
+                        onPanUpdate: (details) {
+                          final localPosition = details.localPosition;
+
+                          if (controller.paths.isNotEmpty &&
+                              _isPointInBounds(localPosition, drawingBounds)) {
+                            controller.addPointToCurrentPath(localPosition);
+                          }
+                        },
+                        onPanEnd: (_) {
+                          controller.endPath();
+                        },
+                        child: ClipRect(
+                          clipper: _ImageClipper(drawingBounds),
+                          child: ListenableBuilder(
+                            listenable: controller,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                painter: DrawingPainter(controller),
+                                child: Container(color: Colors.transparent),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                    if (isPlacing && overlayPath != null && overlayRect != null)
+                      _OverlayPlacement(
+                        imagePath: overlayPath,
+                        rect: overlayRect,
+                        bounds: drawingBounds,
+                        onRectChanged: (r) => context
+                            .read<CanvasBloc>()
+                            .add(UpdateOverlayRectEvent(r)),
+                      ),
                   ],
+                    );
+                  },
                 );
               },
             ),
@@ -216,5 +263,132 @@ class _ImageClipper extends CustomClipper<Rect> {
   @override
   bool shouldReclip(covariant _ImageClipper oldClipper) {
     return oldClipper.clipRect != clipRect;
+  }
+}
+
+class _OverlayPlacement extends StatefulWidget {
+  final String imagePath;
+  final Rect rect;
+  final Rect bounds;
+  final ValueChanged<Rect> onRectChanged;
+
+  const _OverlayPlacement({
+    required this.imagePath,
+    required this.rect,
+    required this.bounds,
+    required this.onRectChanged,
+  });
+
+  @override
+  State<_OverlayPlacement> createState() => _OverlayPlacementState();
+}
+
+class _OverlayPlacementState extends State<_OverlayPlacement> {
+  late Rect _rect;
+  Offset? _dragStart;
+  Rect? _startRect;
+
+  @override
+  void initState() {
+    super.initState();
+    _rect = widget.rect;
+  }
+
+  void _notify() {
+    widget.onRectChanged(_rect);
+  }
+
+  void _onDragStart(DragStartDetails details) {
+    _dragStart = details.globalPosition;
+    _startRect = _rect;
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    if (_dragStart == null || _startRect == null) return;
+    final delta = details.globalPosition - _dragStart!;
+    Rect next = _startRect!.shift(delta);
+    if (next.left < widget.bounds.left) {
+      next = next.shift(Offset(widget.bounds.left - next.left, 0));
+    }
+    if (next.top < widget.bounds.top) {
+      next = next.shift(Offset(0, widget.bounds.top - next.top));
+    }
+    if (next.right > widget.bounds.right) {
+      next = next.shift(Offset(widget.bounds.right - next.right, 0));
+    }
+    if (next.bottom > widget.bounds.bottom) {
+      next = next.shift(Offset(0, widget.bounds.bottom - next.bottom));
+    }
+    setState(() => _rect = next);
+    _notify();
+  }
+
+  void _onResizeDrag(DragUpdateDetails details) {
+    final Size minSize = Size(40, 40);
+    double newWidth = (_rect.width + details.delta.dx).clamp(minSize.width, widget.bounds.width);
+    double aspect = _rect.height / _rect.width;
+    double newHeight = newWidth * aspect;
+    Rect next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
+    if (next.right > widget.bounds.right) {
+      newWidth = widget.bounds.right - _rect.left;
+      newHeight = newWidth * aspect;
+      next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
+    }
+    if (next.bottom > widget.bounds.bottom) {
+      newHeight = widget.bounds.bottom - _rect.top;
+      newWidth = newHeight / aspect;
+      next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
+    }
+    setState(() => _rect = next);
+    _notify();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: _rect.left,
+      top: _rect.top,
+      width: _rect.width,
+      height: _rect.height,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
+            onPanStart: _onDragStart,
+            onPanUpdate: _onDragUpdate,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.purple, width: 1.5),
+              ),
+              child: Image.file(
+                File(widget.imagePath),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+
+          Positioned(
+            right: -12,
+            bottom: -12,
+            child: GestureDetector(
+              onPanUpdate: _onResizeDrag,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.purple,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(
+                  Icons.open_in_full,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
