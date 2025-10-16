@@ -64,6 +64,9 @@ dependencies:
   # A composable, multi-platform, Future-based API for HTTP requests.
   http: 1.5.0
 
+  # Network connectivity status (WiFi/Cellular/none)
+  connectivity_plus: 6.1.0
+
   # A cross platform plugin for displaying and scheduling local notifications for Flutter applications with the ability to customise for each platform.
   flutter_local_notifications: 19.4.2
 

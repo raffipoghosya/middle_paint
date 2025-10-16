@@ -20,6 +20,8 @@ import 'package:middle_paint/ui/widgets/artwork/artwork_grid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:middle_paint/core/blocs/artwork_bloc/artwork_state.dart';
 import 'package:middle_paint/ui/widgets/dialogs/log_out_confirmation_dialog.dart';
+import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:middle_paint/core/injector/injector.dart';
 
 class HomeScreen extends StatefulWidget {
   static const name = '/home';
@@ -95,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ];
         }
 
-        return Scaffold(
+        return BlocProvider(
+          create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
+          child: Scaffold(
           backgroundColor: AppColors.primaryBlack,
           body: Stack(
             children: [
@@ -130,6 +134,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+              // Connectivity banner (gallery)
+              Positioned(
+                top: topPadding + AppConstants.contentHeight,
+                left: 0,
+                right: 0,
+                child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                  builder: (context, netState) {
+                    if (netState.isOnline == false) {
+                      return Container(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                        color: AppColors.error200.withValues(alpha: 0.2),
+                        child: Text(
+                          'Нет подключения к Интернету',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.primary50,
+                              ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+
               CustomAppBar(
                 leading: GestureDetector(
                   onTap: () => _onLogOutTap(context),
@@ -139,6 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 actions: appBarActions,
               ),
             ],
+          ),
           ),
         );
       },

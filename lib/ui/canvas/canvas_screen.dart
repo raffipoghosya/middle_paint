@@ -19,6 +19,8 @@ import 'package:middle_paint/core/services/image_saver_service.dart';
 import 'package:middle_paint/core/injector/injector.dart';
 import 'package:middle_paint/core/firebase_services/authentication.dart';
 import 'package:middle_paint/core/models/artwork_model.dart';
+import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:middle_paint/core/injector/injector.dart';
 
 class CanvasScreen extends StatefulWidget {
   static const name = '/canvas';
@@ -320,6 +322,34 @@ class _CanvasScreenState extends State<CanvasScreen> {
           body: Stack(
             children: [
               const CustomBackground(child: SizedBox.expand()),
+
+              // Connectivity banner
+              BlocProvider(
+                create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
+                child: Positioned(
+                  top: appBarHeight,
+                  left: 0,
+                  right: 0,
+                  child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                    builder: (context, netState) {
+                      if (netState.isOnline == false) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          color: AppColors.error200.withValues(alpha: 0.2),
+                          child: Text(
+                            'Нет подключения к Интернету',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.primary50,
+                                ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ),
 
               DrawingArea(
                 appBarHeight: appBarHeight,
