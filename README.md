@@ -21,6 +21,8 @@ The app focuses on delivering a smooth and intuitive drawing experience with  lo
 - **Image Gallery Screen** showing all artworks stored in Firebase
 - **Clean Architecture & State Management** for maintainable and scalable code
 - **Support** for multiple drawing layers
+- **Image Editing** allowing users add images from the gallery to the canvas with placement and size controls.
+- **Internet Connectivity** Notify users if they're offline, especially before cloud actions.
 
 ---
 
