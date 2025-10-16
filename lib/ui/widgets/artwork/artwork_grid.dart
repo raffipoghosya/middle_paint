@@ -63,7 +63,10 @@ class ArtworkGrid extends StatelessWidget {
           itemCount: state.artworks.length,
           itemBuilder: (context, index) {
             final artwork = state.artworks[index];
-            return ArtworkGridItem(artwork: artwork, onOfflineTap: onOfflineTap);
+            return ArtworkGridItem(
+              artwork: artwork,
+              onOfflineTap: onOfflineTap,
+            );
           },
         );
       },

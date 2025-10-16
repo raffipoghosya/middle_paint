@@ -156,88 +156,102 @@ class DrawingArea extends StatelessWidget {
                   builder: (context, canvasState) {
                     final isPlacing = canvasState.isPlacingOverlay;
                     final overlayPath = canvasState.overlayImagePath;
-                    final overlayRect = canvasState.overlayRect ??
+                    final overlayRect =
+                        canvasState.overlayRect ??
                         (isPlacing
                             ? Rect.fromLTWH(
-                                drawingBounds.left + drawingBounds.width * 0.25,
-                                drawingBounds.top + drawingBounds.height * 0.25,
-                                drawingBounds.width * 0.5,
-                                drawingBounds.height * 0.5,
-                              )
+                              drawingBounds.left + drawingBounds.width * 0.25,
+                              drawingBounds.top + drawingBounds.height * 0.25,
+                              drawingBounds.width * 0.5,
+                              drawingBounds.height * 0.5,
+                            )
                             : null);
 
-                    if (isPlacing && canvasState.overlayRect == null && overlayRect != null) {
-                      context.read<CanvasBloc>().add(UpdateOverlayRectEvent(overlayRect));
+                    if (isPlacing &&
+                        canvasState.overlayRect == null &&
+                        overlayRect != null) {
+                      context.read<CanvasBloc>().add(
+                        UpdateOverlayRectEvent(overlayRect),
+                      );
                     }
 
                     return Stack(
-                  children: [
-                    if (backgroundImagePath != null)
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8.r),
-                          child: Image.file(
-                            File(backgroundImagePath!),
-                            fit: BoxFit.contain,
+                      children: [
+                        if (backgroundImagePath != null)
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.r),
+                              child: Image.file(
+                                File(backgroundImagePath!),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
 
-                    for (final placed in canvasState.placedOverlays)
-                      Positioned(
-                        left: placed.rect.left,
-                        top: placed.rect.top,
-                        width: placed.rect.width,
-                        height: placed.rect.height,
-                        child: Image.file(
-                          File(placed.imagePath),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                        for (final placed in canvasState.placedOverlays)
+                          Positioned(
+                            left: placed.rect.left,
+                            top: placed.rect.top,
+                            width: placed.rect.width,
+                            height: placed.rect.height,
+                            child: Image.file(
+                              File(placed.imagePath),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
 
-                    if (!isPlacing)
-                      GestureDetector(
-                        onPanStart: (details) {
-                          final localPosition = details.localPosition;
-                          if (_isPointInBounds(localPosition, drawingBounds)) {
-                            controller.startNewPath(localPosition);
-                          }
-                        },
-                        onPanUpdate: (details) {
-                          final localPosition = details.localPosition;
-
-                          if (controller.paths.isNotEmpty &&
-                              _isPointInBounds(localPosition, drawingBounds)) {
-                            controller.addPointToCurrentPath(localPosition);
-                          }
-                        },
-                        onPanEnd: (_) {
-                          controller.endPath();
-                        },
-                        child: ClipRect(
-                          clipper: _ImageClipper(drawingBounds),
-                          child: ListenableBuilder(
-                            listenable: controller,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: DrawingPainter(controller),
-                                child: Container(color: Colors.transparent),
-                              );
+                        if (!isPlacing)
+                          GestureDetector(
+                            onPanStart: (details) {
+                              final localPosition = details.localPosition;
+                              if (_isPointInBounds(
+                                localPosition,
+                                drawingBounds,
+                              )) {
+                                controller.startNewPath(localPosition);
+                              }
                             },
-                          ),
-                        ),
-                      ),
+                            onPanUpdate: (details) {
+                              final localPosition = details.localPosition;
 
-                    if (isPlacing && overlayPath != null && overlayRect != null)
-                      _OverlayPlacement(
-                        imagePath: overlayPath,
-                        rect: overlayRect,
-                        bounds: drawingBounds,
-                        onRectChanged: (r) => context
-                            .read<CanvasBloc>()
-                            .add(UpdateOverlayRectEvent(r)),
-                      ),
-                  ],
+                              if (controller.paths.isNotEmpty &&
+                                  _isPointInBounds(
+                                    localPosition,
+                                    drawingBounds,
+                                  )) {
+                                controller.addPointToCurrentPath(localPosition);
+                              }
+                            },
+                            onPanEnd: (_) {
+                              controller.endPath();
+                            },
+                            child: ClipRect(
+                              clipper: _ImageClipper(drawingBounds),
+                              child: ListenableBuilder(
+                                listenable: controller,
+                                builder: (context, child) {
+                                  return CustomPaint(
+                                    painter: DrawingPainter(controller),
+                                    child: Container(color: Colors.transparent),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+
+                        if (isPlacing &&
+                            overlayPath != null &&
+                            overlayRect != null)
+                          _OverlayPlacement(
+                            imagePath: overlayPath,
+                            rect: overlayRect,
+                            bounds: drawingBounds,
+                            onRectChanged:
+                                (r) => context.read<CanvasBloc>().add(
+                                  UpdateOverlayRectEvent(r),
+                                ),
+                          ),
+                      ],
                     );
                   },
                 );
@@ -300,23 +314,28 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
     final imageProvider = Image.file(File(widget.imagePath)).image;
     final stream = imageProvider.resolve(ImageConfiguration.empty);
     ImageStreamListener? listener;
-    listener = ImageStreamListener((ImageInfo info, bool _) {
-      _naturalSize = Size(
-        info.image.width.toDouble(),
-        info.image.height.toDouble(),
-      );
-      setState(() {});
-      stream.removeListener(listener!);
-    }, onError: (dynamic _, __) {
-      if (listener != null) {
-        stream.removeListener(listener);
-      }
-    });
+    listener = ImageStreamListener(
+      (ImageInfo info, bool _) {
+        _naturalSize = Size(
+          info.image.width.toDouble(),
+          info.image.height.toDouble(),
+        );
+        setState(() {});
+        stream.removeListener(listener!);
+      },
+      onError: (dynamic _, __) {
+        if (listener != null) {
+          stream.removeListener(listener);
+        }
+      },
+    );
     stream.addListener(listener);
   }
 
   double get _imageAspect {
-    if (_naturalSize == null || _naturalSize!.width == 0 || _naturalSize!.height == 0) {
+    if (_naturalSize == null ||
+        _naturalSize!.width == 0 ||
+        _naturalSize!.height == 0) {
       return _rect.width / _rect.height;
     }
     return _naturalSize!.width / _naturalSize!.height;
@@ -334,25 +353,48 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
     Offset newCenter = _startRect!.center + focalDelta;
 
     final double aspect = _imageAspect; // width/height
-    double newWidth = (_startRect!.width * details.scale).clamp(60.0, widget.bounds.width);
+    double newWidth = (_startRect!.width * details.scale).clamp(
+      60.0,
+      widget.bounds.width,
+    );
     double newHeight = newWidth / aspect;
 
-    Rect candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+    Rect candidate = Rect.fromCenter(
+      center: newCenter,
+      width: newWidth,
+      height: newHeight,
+    );
 
     if (candidate.left < widget.bounds.left) {
-      newCenter = Offset(widget.bounds.left + candidate.width / 2, newCenter.dy);
+      newCenter = Offset(
+        widget.bounds.left + candidate.width / 2,
+        newCenter.dy,
+      );
     }
     if (candidate.top < widget.bounds.top) {
-      newCenter = Offset(newCenter.dx, widget.bounds.top + candidate.height / 2);
+      newCenter = Offset(
+        newCenter.dx,
+        widget.bounds.top + candidate.height / 2,
+      );
     }
     if (candidate.right > widget.bounds.right) {
-      newCenter = Offset(widget.bounds.right - candidate.width / 2, newCenter.dy);
+      newCenter = Offset(
+        widget.bounds.right - candidate.width / 2,
+        newCenter.dy,
+      );
     }
     if (candidate.bottom > widget.bounds.bottom) {
-      newCenter = Offset(newCenter.dx, widget.bounds.bottom - candidate.height / 2);
+      newCenter = Offset(
+        newCenter.dx,
+        widget.bounds.bottom - candidate.height / 2,
+      );
     }
 
-    candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+    candidate = Rect.fromCenter(
+      center: newCenter,
+      width: newWidth,
+      height: newHeight,
+    );
 
     double overflowScaleW = 1.0;
     double overflowScaleH = 1.0;
@@ -362,11 +404,16 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
     if (candidate.height > widget.bounds.height) {
       overflowScaleH = widget.bounds.height / candidate.height;
     }
-    final double overflowScale = overflowScaleW < overflowScaleH ? overflowScaleW : overflowScaleH;
+    final double overflowScale =
+        overflowScaleW < overflowScaleH ? overflowScaleW : overflowScaleH;
     if (overflowScale < 1.0) {
       newWidth = candidate.width * overflowScale;
       newHeight = candidate.height * overflowScale;
-      candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+      candidate = Rect.fromCenter(
+        center: newCenter,
+        width: newWidth,
+        height: newHeight,
+      );
     }
 
     setState(() => _rect = candidate);
@@ -376,7 +423,6 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
   void _notify() {
     widget.onRectChanged(_rect);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -395,10 +441,7 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
               decoration: BoxDecoration(
                 border: Border.all(color: AppColors.purple, width: 1.5),
               ),
-              child: Image.file(
-                File(widget.imagePath),
-                fit: BoxFit.fill,
-              ),
+              child: Image.file(File(widget.imagePath), fit: BoxFit.fill),
             ),
           ),
         ],

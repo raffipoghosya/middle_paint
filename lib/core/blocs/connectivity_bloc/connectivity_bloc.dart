@@ -15,7 +15,10 @@ class ConnectivityBloc extends Bloc<ConnectivityEvent, ConnectivityState> {
     on<ConnectivityChanged>(_onChanged);
   }
 
-  Future<void> _onStarted(ConnectivityStarted event, Emitter<ConnectivityState> emit) async {
+  Future<void> _onStarted(
+    ConnectivityStarted event,
+    Emitter<ConnectivityState> emit,
+  ) async {
     final online = await _service.isOnline();
     emit(state.copyWith(isOnline: online));
     _subscription = _service.onConnectivityChanged().listen((online) {
@@ -33,5 +36,3 @@ class ConnectivityBloc extends Bloc<ConnectivityEvent, ConnectivityState> {
     return super.close();
   }
 }
-
-

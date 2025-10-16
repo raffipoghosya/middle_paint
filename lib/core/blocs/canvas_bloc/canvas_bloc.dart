@@ -191,16 +191,14 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     }
   }
 
-  void _onCommitOverlay(
-    CommitOverlayEvent event,
-    Emitter<CanvasState> emit,
-  ) {
+  void _onCommitOverlay(CommitOverlayEvent event, Emitter<CanvasState> emit) {
     if (state.overlayImagePath != null && state.overlayRect != null) {
-      final overlays = List<PlacedOverlay>.from(state.placedOverlays)
-        ..add(PlacedOverlay(
+      final overlays = List<PlacedOverlay>.from(state.placedOverlays)..add(
+        PlacedOverlay(
           imagePath: state.overlayImagePath!,
           rect: state.overlayRect!,
-        ));
+        ),
+      );
       emit(
         state.copyWith(
           placedOverlays: overlays,
@@ -210,15 +208,24 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
         ),
       );
     } else {
-      emit(state.copyWith(isPlacingOverlay: false, overlayImagePath: null, overlayRect: null));
+      emit(
+        state.copyWith(
+          isPlacingOverlay: false,
+          overlayImagePath: null,
+          overlayRect: null,
+        ),
+      );
     }
   }
 
-  void _onCancelOverlay(
-    CancelOverlayEvent event,
-    Emitter<CanvasState> emit,
-  ) {
-    emit(state.copyWith(isPlacingOverlay: false, overlayImagePath: null, overlayRect: null));
+  void _onCancelOverlay(CancelOverlayEvent event, Emitter<CanvasState> emit) {
+    emit(
+      state.copyWith(
+        isPlacingOverlay: false,
+        overlayImagePath: null,
+        overlayRect: null,
+      ),
+    );
   }
 
   /// Resets the canvas state by clearing the background image.

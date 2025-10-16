@@ -94,86 +94,95 @@ class _HomeScreenState extends State<HomeScreen> {
         return BlocProvider(
           create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
           child: Scaffold(
-          backgroundColor: AppColors.primaryBlack,
-          body: Stack(
-            children: [
-              CustomBackground(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.0.w),
-                  child: Column(
-                    children: [
-                      SizedBox(height: topPadding + AppConstants.contentHeight),
-
-                      Expanded(
-                        child: ArtworkGrid(
-                          onOfflineTap: () {
-                            setState(() => _flashOfflineBanner = true);
-                            Future.delayed(const Duration(milliseconds: 900), () {
-                              if (mounted) setState(() => _flashOfflineBanner = false);
-                            });
-                          },
+            backgroundColor: AppColors.primaryBlack,
+            body: Stack(
+              children: [
+                CustomBackground(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.0.w),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: topPadding + AppConstants.contentHeight,
                         ),
-                      ),
 
-                      if (showBottomButton)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            MainButton(
-                              onTap: _onCreateTap,
-                              buttonText: 'Создать',
-                              textColor: AppColors.neutral50,
-                              buttonColors: [
-                                AppColors.magenta,
-                                AppColors.purple,
-                              ],
-                            ),
-
-                            const BottomPadding(),
-                          ],
+                        Expanded(
+                          child: ArtworkGrid(
+                            onOfflineTap: () {
+                              setState(() => _flashOfflineBanner = true);
+                              Future.delayed(
+                                const Duration(milliseconds: 900),
+                                () {
+                                  if (mounted)
+                                    setState(() => _flashOfflineBanner = false);
+                                },
+                              );
+                            },
+                          ),
                         ),
-                    ],
+
+                        if (showBottomButton)
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              MainButton(
+                                onTap: _onCreateTap,
+                                buttonText: 'Создать',
+                                textColor: AppColors.neutral50,
+                                buttonColors: [
+                                  AppColors.magenta,
+                                  AppColors.purple,
+                                ],
+                              ),
+
+                              const BottomPadding(),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              Positioned(
-                top: topPadding + AppConstants.contentHeight,
-                left: 0,
-                right: 0,
-                child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
-                  builder: (context, netState) {
-                    if (netState.isOnline == false) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-                        color: _flashOfflineBanner
-                            ? AppColors.error200.withValues(alpha: 0.5)
-                            : AppColors.error200.withValues(alpha: 0.2),
-                        child: Text(
-                          'Нет подключения к Интернету',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.primary50,
-                              ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
+                Positioned(
+                  top: topPadding + AppConstants.contentHeight,
+                  left: 0,
+                  right: 0,
+                  child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                    builder: (context, netState) {
+                      if (netState.isOnline == false) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24.w,
+                            vertical: 8.h,
+                          ),
+                          color:
+                              _flashOfflineBanner
+                                  ? AppColors.error200.withValues(alpha: 0.5)
+                                  : AppColors.error200.withValues(alpha: 0.2),
+                          child: Text(
+                            'Нет подключения к Интернету',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.primary50),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ),
-              ),
 
-              CustomAppBar(
-                leading: GestureDetector(
-                  onTap: () => _onLogOutTap(context),
-                  child: SvgPicture.asset(Assets.vectors.logout, width: 24.r),
+                CustomAppBar(
+                  leading: GestureDetector(
+                    onTap: () => _onLogOutTap(context),
+                    child: SvgPicture.asset(Assets.vectors.logout, width: 24.r),
+                  ),
+                  title: 'Галерея',
+                  actions: appBarActions,
                 ),
-                title: 'Галерея',
-                actions: appBarActions,
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         );
       },

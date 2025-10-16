@@ -8,8 +8,8 @@ class CanvasState extends Equatable {
   final String? saveMessage;
   final String? artworkIdToEdit;
   final String? originalArtworkUrl;
-  final String? overlayImagePath; 
-  final Rect? overlayRect; 
+  final String? overlayImagePath;
+  final Rect? overlayRect;
   final bool isPlacingOverlay;
   final List<PlacedOverlay> placedOverlays;
 

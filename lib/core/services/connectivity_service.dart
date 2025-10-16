@@ -8,7 +8,9 @@ class ConnectivityService {
 
   /// Returns a broadcast stream of online/offline status.
   Stream<bool> onConnectivityChanged() {
-    return _connectivity.onConnectivityChanged.map((results) => _isOnlineFromList(results));
+    return _connectivity.onConnectivityChanged.map(
+      (results) => _isOnlineFromList(results),
+    );
   }
 
   /// Checks current connectivity once.
@@ -37,5 +39,3 @@ class ConnectivityService {
     _subscription?.cancel();
   }
 }
-
-

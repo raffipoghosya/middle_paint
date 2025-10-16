@@ -58,7 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
         if (details.primaryDelta != null && details.primaryDelta! > 12) {
@@ -66,88 +66,89 @@ Widget build(BuildContext context) {
         }
       },
       child: Scaffold(
-      backgroundColor: AppColors.primaryBlack,
-      body: CustomBackground(
-        child: BlocBuilder<SignUpBloc, SignUpState>(
-          builder: (context, state) {
-            final formGroup = state.signUpForm.formGroup;
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.0.w),
-              child: ReactiveForm(
-                formGroup: formGroup,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AuthTitle('Регистрация'),
-                              SizedBox(height: 20.h),
+        backgroundColor: AppColors.primaryBlack,
+        body: CustomBackground(
+          child: BlocBuilder<SignUpBloc, SignUpState>(
+            builder: (context, state) {
+              final formGroup = state.signUpForm.formGroup;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0.w),
+                child: ReactiveForm(
+                  formGroup: formGroup,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AuthTitle('Регистрация'),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'Имя',
-                                hintText: 'Введите ваше имя',
-                                formControl: state.signUpForm.nameControl,
-                                textInputAction: TextInputAction.next, 
-                              ),
-                              SizedBox(height: 20.h),
+                                CustomTextField(
+                                  labelText: 'Имя',
+                                  hintText: 'Введите ваше имя',
+                                  formControl: state.signUpForm.nameControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'e-mail',
-                                hintText: 'Ваша электронная почта',
-                                keyboardType: TextInputType.emailAddress,
-                                formControl: state.signUpForm.emailControl,
-                                textInputAction: TextInputAction.next,
-                              ),
-                              SizedBox(height: 40.h),
+                                CustomTextField(
+                                  labelText: 'e-mail',
+                                  hintText: 'Ваша электронная почта',
+                                  keyboardType: TextInputType.emailAddress,
+                                  formControl: state.signUpForm.emailControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 40.h),
 
-                              CustomTextField(
-                                labelText: 'Пароль',
-                                hintText: '6-16 символов',
-                                isPassword: true,
-                                formControl: state.signUpForm.passwordControl,
-                                textInputAction: TextInputAction.next,
-                              ),
-                              SizedBox(height: 20.h),
+                                CustomTextField(
+                                  labelText: 'Пароль',
+                                  hintText: '6-16 символов',
+                                  isPassword: true,
+                                  formControl: state.signUpForm.passwordControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'Подтверждение пароля',
-                                hintText: '6-16 символов',
-                                isPassword: true,
-                                formControl: state.signUpForm.confirmPasswordControl,
-                                textInputAction: TextInputAction.done, 
-                                onSubmitted: (_) => _onSignUpTap(state),
-                              ),
-                              SizedBox(height: 20.h),
-                            ],
+                                CustomTextField(
+                                  labelText: 'Подтверждение пароля',
+                                  hintText: '6-16 символов',
+                                  isPassword: true,
+                                  formControl:
+                                      state.signUpForm.confirmPasswordControl,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _onSignUpTap(state),
+                                ),
+                                SizedBox(height: 20.h),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    ReactiveFormConsumer(
-                      builder: (context, form, child) {
-                        return AuthButton(
-                          disabled: !form.valid || state.loading,
-                          loading: state.loading,
-                          buttonName: 'Зарегистрироваться',
-                          onTap: () => _onSignUpTap(state),
-                        );
-                      },
-                    ),
+                      ReactiveFormConsumer(
+                        builder: (context, form, child) {
+                          return AuthButton(
+                            disabled: !form.valid || state.loading,
+                            loading: state.loading,
+                            buttonName: 'Зарегистрироваться',
+                            onTap: () => _onSignUpTap(state),
+                          );
+                        },
+                      ),
 
-                    BottomPadding(),
-                  ],
+                      BottomPadding(),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
-    ),
     );
   }
 }

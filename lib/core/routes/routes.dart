@@ -13,32 +13,36 @@ class AppRoutes {
     routes: <RouteBase>[
       GoRoute(
         path: SplashScreen.name,
-        pageBuilder: (context, state) => _slideTransitionPage(
-          key: state.pageKey,
-          child: const SplashScreen(),
-        ),
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SplashScreen(),
+            ),
       ),
       GoRoute(
         path: SignInScreen.name,
-        pageBuilder: (context, state) => _slideTransitionPage(
-          key: state.pageKey,
-          child: const SignInScreen(),
-        ),
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SignInScreen(),
+            ),
       ),
       GoRoute(
         path: SignUpScreen.name,
-        pageBuilder: (context, state) => _slideTransitionPage(
-          key: state.pageKey,
-          child: const SignUpScreen(),
-          durationMs: 500,
-        ),
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SignUpScreen(),
+              durationMs: 500,
+            ),
       ),
       GoRoute(
         path: HomeScreen.name,
-        pageBuilder: (context, state) => _slideTransitionPage(
-          key: state.pageKey,
-          child: const HomeScreen(),
-        ),
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const HomeScreen(),
+            ),
       ),
       GoRoute(
         path: CanvasScreen.name,
