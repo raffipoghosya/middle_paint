@@ -59,7 +59,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primaryBlack,
       body: CustomBackground(
@@ -86,6 +86,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 labelText: 'Имя',
                                 hintText: 'Введите ваше имя',
                                 formControl: state.signUpForm.nameControl,
+                                textInputAction: TextInputAction.next, 
                               ),
                               SizedBox(height: 20.h),
 
@@ -94,6 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 hintText: 'Ваша электронная почта',
                                 keyboardType: TextInputType.emailAddress,
                                 formControl: state.signUpForm.emailControl,
+                                textInputAction: TextInputAction.next,
                               ),
                               SizedBox(height: 40.h),
 
@@ -102,6 +104,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 hintText: '6-16 символов',
                                 isPassword: true,
                                 formControl: state.signUpForm.passwordControl,
+                                textInputAction: TextInputAction.next,
                               ),
                               SizedBox(height: 20.h),
 
@@ -109,8 +112,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 labelText: 'Подтверждение пароля',
                                 hintText: '6-16 символов',
                                 isPassword: true,
-                                formControl:
-                                    state.signUpForm.confirmPasswordControl,
+                                formControl: state.signUpForm.confirmPasswordControl,
+                                textInputAction: TextInputAction.done, 
+                                onSubmitted: (_) => _onSignUpTap(state),
                               ),
                               SizedBox(height: 20.h),
                             ],

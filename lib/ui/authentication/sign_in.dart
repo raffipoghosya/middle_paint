@@ -95,6 +95,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: 'Введите электронную почту',
                                 keyboardType: TextInputType.emailAddress,
                                 formControl: signInForm.emailControl,
+                                textInputAction: TextInputAction.next,
                               ),
                               SizedBox(height: 20.h),
                               CustomTextField(
@@ -102,6 +103,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: 'Введите пароль',
                                 isPassword: true,
                                 formControl: signInForm.passwordControl,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _onSignInTap(state),
                               ),
                             ],
                           ),
