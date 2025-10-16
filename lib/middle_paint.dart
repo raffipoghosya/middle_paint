@@ -4,12 +4,11 @@ import 'package:middle_paint/base/text_theme/text_theme.dart';
 import 'package:middle_paint/core/routes/routes.dart';
 
 class MiddlePaint extends StatelessWidget {
-  const MiddlePaint(this.initialRoute, {super.key});
-  final String initialRoute;
+  const MiddlePaint({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Middle Paint',
       theme: ThemeData(
         textSelectionTheme: const TextSelectionThemeData(
@@ -27,8 +26,7 @@ class MiddlePaint extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
-      initialRoute: initialRoute,
+      routerConfig: AppRoutes.router,
     );
   }
 }

@@ -309,7 +309,7 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
       stream.removeListener(listener!);
     }, onError: (dynamic _, __) {
       if (listener != null) {
-        stream.removeListener(listener!);
+        stream.removeListener(listener);
       }
     });
     stream.addListener(listener);

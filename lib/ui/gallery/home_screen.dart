@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:middle_paint/core/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:middle_paint/core/blocs/sign_in_bloc/sign_in_event.dart';
-import 'package:middle_paint/core/routes/routes.dart';
 import 'package:middle_paint/gen/assets.gen.dart';
 import 'package:middle_paint/ui/authentication/sign_in.dart';
 import 'package:middle_paint/ui/widgets/app_bar.dart/custom_app_bar.dart';
@@ -21,6 +20,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:middle_paint/core/blocs/artwork_bloc/artwork_state.dart';
 import 'package:middle_paint/ui/widgets/dialogs/log_out_confirmation_dialog.dart';
 import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:middle_paint/core/injector/injector.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -51,14 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<SignInBloc>().add(
           LogOutEvent(
             onSuccess: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                AppRoutes.slideTransitionRoute(
-                  const SignInScreen(),
-                  const RouteSettings(name: SignInScreen.name),
-                  reverse: true,
-                ),
-                (route) => false,
-              );
+              context.go(SignInScreen.name);
             },
           ),
         );
@@ -67,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onCreateTap() {
-    Navigator.of(context).pushNamed(CanvasScreen.name);
+    context.push(CanvasScreen.name);
   }
 
   @override

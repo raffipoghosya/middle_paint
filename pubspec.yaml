@@ -64,8 +64,8 @@ dependencies:
   # A composable, multi-platform, Future-based API for HTTP requests.
   http: 1.5.0
 
-  # Network connectivity status (WiFi/Cellular/none)
-  connectivity_plus: 6.1.0
+  # Flutter plugin for discovering the state of the network (WiFi & mobile/cellular) connectivity.
+  connectivity_plus: 7.0.0
 
   # A cross platform plugin for displaying and scheduling local notifications for Flutter applications with the ability to customise for each platform.
   flutter_local_notifications: 19.4.2
@@ -78,6 +78,9 @@ dependencies:
 
   # Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.
   share_plus: 12.0.0
+
+  # A declarative router for Flutter based on Navigation 2 supporting deep linking, data-driven routes and more
+  go_router: 16.2.5
 
   
 dev_dependencies:

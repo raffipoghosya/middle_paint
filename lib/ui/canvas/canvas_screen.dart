@@ -20,7 +20,8 @@ import 'package:middle_paint/core/injector/injector.dart';
 import 'package:middle_paint/core/firebase_services/authentication.dart';
 import 'package:middle_paint/core/models/artwork_model.dart';
 import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
-import 'package:middle_paint/core/injector/injector.dart';
+import 'package:go_router/go_router.dart';
+import 'package:middle_paint/ui/gallery/home_screen.dart';
 
 class CanvasScreen extends StatefulWidget {
   static const name = '/canvas';
@@ -155,7 +156,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
         pngBytes: pngBytes,
         cropRect: _currentDrawingBounds,
         onSuccess: () {
-          Navigator.of(context).pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(HomeScreen.name);
+          }
         },
         onError: (message) {},
         artworkId: artworkIdToEdit,
@@ -475,7 +480,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 leading: GestureDetector(
                   onTap: () {
                     context.read<CanvasBloc>().add(ClearBackgroundImageEvent());
-                    Navigator.of(context).pop();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(HomeScreen.name);
+                    }
                   },
                   child: SvgPicture.asset(
                     Assets.vectors.arrowLeft,

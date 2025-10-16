@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:middle_paint/core/blocs/canvas_bloc/canvas_bloc.dart';
 import 'package:middle_paint/core/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:middle_paint/middle_paint.dart';
-import 'package:middle_paint/ui/splash/splash_screen.dart';
 import 'package:middle_paint/core/injector/injector.dart' as di;
 import 'package:middle_paint/core/blocs/sign_up_bloc/sign_up_bloc.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -27,8 +26,6 @@ void main() async {
 
   await di.sl<NotificationService>().initialize();
 
-  String initialRoute = SplashScreen.name;
-
   runApp(
     MultiBlocProvider(
       providers: [
@@ -44,7 +41,7 @@ void main() async {
         ),
         minTextAdapt: true,
         splitScreenMode: true,
-        builder: (context, child) => MiddlePaint(initialRoute),
+        builder: (context, child) => const MiddlePaint(),
       ),
     ),
   );

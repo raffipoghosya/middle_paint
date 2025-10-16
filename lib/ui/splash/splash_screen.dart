@@ -7,6 +7,7 @@ import 'package:middle_paint/ui/authentication/sign_in.dart';
 import '../widgets/background/custom_background.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:middle_paint/ui/gallery/home_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   static const name = '/splash';
@@ -42,8 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToNextScreen() {
     final user = FirebaseAuth.instance.currentUser;
     final String nextRoute = user == null ? SignInScreen.name : HomeScreen.name;
-
-    Navigator.pushReplacementNamed(context, nextRoute);
+    context.go(nextRoute);
   }
 
   @override

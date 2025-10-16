@@ -12,6 +12,7 @@ import 'package:middle_paint/ui/widgets/background/custom_background.dart';
 import 'package:middle_paint/ui/widgets/fields/custom_text_field.dart';
 import 'package:middle_paint/ui/widgets/spaces/bottom_padding.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const name = '/signUp';
@@ -37,9 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     signUpBloc.add(
       SignUpWithEmailEvent(
         onSuccess: () {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(HomeScreen.name, (route) => false);
+          context.go(HomeScreen.name);
         },
         onError: (errorMessage) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -60,7 +59,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
 Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (details.primaryDelta != null && details.primaryDelta! > 12) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.primaryBlack,
       body: CustomBackground(
         child: BlocBuilder<SignUpBloc, SignUpState>(
@@ -142,6 +147,7 @@ Widget build(BuildContext context) {
           },
         ),
       ),
+    ),
     );
   }
 }

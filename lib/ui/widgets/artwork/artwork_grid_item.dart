@@ -13,6 +13,7 @@ import 'package:middle_paint/ui/widgets/dialogs/rename_artwork_dialog.dart';
 import 'package:pull_down_button/pull_down_button.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class ArtworkGridItem extends StatefulWidget {
   final ArtworkModel artwork;
@@ -211,9 +212,7 @@ class _ArtworkGridItemState extends State<ArtworkGridItem> {
                     widget.onOfflineTap?.call();
                     return;
                   }
-                  Navigator.of(
-                    context,
-                  ).pushNamed(CanvasScreen.name, arguments: widget.artwork);
+                  context.push(CanvasScreen.name, extra: widget.artwork);
                 },
                 onLongPress: openMenu,
                 child: _buildItemContent(context, isMenuOpen),
