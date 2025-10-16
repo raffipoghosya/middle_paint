@@ -32,6 +32,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _flashOfflineBanner = false;
   @override
   void initState() {
     super.initState();
@@ -110,7 +111,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       SizedBox(height: topPadding + AppConstants.contentHeight),
 
-                      Expanded(child: ArtworkGrid()),
+                      Expanded(
+                        child: ArtworkGrid(
+                          onOfflineTap: () {
+                            setState(() => _flashOfflineBanner = true);
+                            Future.delayed(const Duration(milliseconds: 900), () {
+                              if (mounted) setState(() => _flashOfflineBanner = false);
+                            });
+                          },
+                        ),
+                      ),
 
                       if (showBottomButton)
                         Column(
@@ -134,7 +144,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Connectivity banner (gallery)
               Positioned(
                 top: topPadding + AppConstants.contentHeight,
                 left: 0,
@@ -142,9 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
                   builder: (context, netState) {
                     if (netState.isOnline == false) {
-                      return Container(
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
                         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-                        color: AppColors.error200.withValues(alpha: 0.2),
+                        color: _flashOfflineBanner
+                            ? AppColors.error200.withValues(alpha: 0.5)
+                            : AppColors.error200.withValues(alpha: 0.2),
                         child: Text(
                           'Нет подключения к Интернету',
                           textAlign: TextAlign.center,

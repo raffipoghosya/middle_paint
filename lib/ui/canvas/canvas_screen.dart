@@ -126,7 +126,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
       Future.delayed(const Duration(milliseconds: 900), () {
         if (mounted) setState(() => _flashOfflineBanner = false);
       });
-      _showSaveSnackBar('Нет подключения к Интернету. Проверьте сеть.', false);
       return;
     }
 

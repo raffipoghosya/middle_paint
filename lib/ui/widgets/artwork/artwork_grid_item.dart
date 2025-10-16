@@ -16,8 +16,9 @@ import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart
 
 class ArtworkGridItem extends StatefulWidget {
   final ArtworkModel artwork;
+  final VoidCallback? onOfflineTap;
 
-  const ArtworkGridItem({super.key, required this.artwork});
+  const ArtworkGridItem({super.key, required this.artwork, this.onOfflineTap});
 
   @override
   State<ArtworkGridItem> createState() => _ArtworkGridItemState();
@@ -207,16 +208,7 @@ class _ArtworkGridItemState extends State<ArtworkGridItem> {
                 onTap: () {
                   final netState = context.read<ConnectivityBloc>().state;
                   if (netState.isOnline == false) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Нет подключения к Интернету',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary50),
-                        ),
-                        backgroundColor: AppColors.error200,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    widget.onOfflineTap?.call();
                     return;
                   }
                   Navigator.of(
