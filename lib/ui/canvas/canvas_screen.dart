@@ -44,6 +44,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   Rect? _currentDrawingBounds;
   final ImageSaverService _imageSaverService = sl<ImageSaverService>();
   final AuthenticationService _authService = sl<AuthenticationService>();
+  bool _flashOfflineBanner = false;
 
   @override
   void initState() {
@@ -116,8 +117,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
   }
 
-  Future<void> _onSaveToCloudTap(String? artworkIdToEdit) async {
+  Future<void> _onSaveToCloudTap(BuildContext tapContext, String? artworkIdToEdit) async {
     _hideAllPopups();
+
+    final isOnline = tapContext.read<ConnectivityBloc>().state.isOnline;
+    if (isOnline == false) {
+      setState(() => _flashOfflineBanner = true);
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (mounted) setState(() => _flashOfflineBanner = false);
+      });
+      _showSaveSnackBar('Нет подключения к Интернету. Проверьте сеть.', false);
+      return;
+    }
 
     if (_authService.currentUser == null) {
       _showSaveSnackBar(
@@ -317,37 +328,38 @@ class _CanvasScreenState extends State<CanvasScreen> {
       builder: (context, canvasState) {
         final bool isScreenEditMode = widget.artworkToEdit != null;
 
-        return Scaffold(
+        return BlocProvider(
+          create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
+          child: Scaffold(
           backgroundColor: AppColors.primaryBlack,
           body: Stack(
             children: [
               const CustomBackground(child: SizedBox.expand()),
 
-              // Connectivity banner
-              BlocProvider(
-                create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
-                child: Positioned(
-                  top: appBarHeight,
-                  left: 0,
-                  right: 0,
-                  child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
-                    builder: (context, netState) {
-                      if (netState.isOnline == false) {
-                        return Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                          color: AppColors.error200.withValues(alpha: 0.2),
-                          child: Text(
-                            'Нет подключения к Интернету',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.primary50,
-                                ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
+              Positioned(
+                top: appBarHeight,
+                left: 0,
+                right: 0,
+                child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                  builder: (context, netState) {
+                    if (netState.isOnline == false) {
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                        color: _flashOfflineBanner
+                            ? AppColors.error200.withValues(alpha: 0.5)
+                            : AppColors.error200.withValues(alpha: 0.2),
+                        child: Text(
+                          'Нет подключения к Интернету',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.primary50,
+                              ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
               ),
 
@@ -380,7 +392,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ToolIcon(
-                                key: _shareIconKey, // Assign the key
+                                key: _shareIconKey, 
                                 assetName: Assets.vectors.download,
                                 onTap: _onShareImageTap,
                                 leftPadding: 0.0,
@@ -491,16 +503,22 @@ class _CanvasScreenState extends State<CanvasScreen> {
                       ),
                     )
                   else
-                    GestureDetector(
-                      onTap:
-                          () => _onSaveToCloudTap(
-                            canvasState.artworkIdToEdit ?? widget.artworkToEdit?.id,
-                          ),
-                      child: SvgPicture.asset(Assets.vectors.check, width: 24.r),
+                    Builder( 
+                      builder: (builderContext) {
+                        return GestureDetector(
+                          onTap:
+                              () => _onSaveToCloudTap(
+                                builderContext,
+                                canvasState.artworkIdToEdit ?? widget.artworkToEdit?.id,
+                              ),
+                          child: SvgPicture.asset(Assets.vectors.check, width: 24.r),
+                        );
+                      },
                     ),
                 ],
               ),
             ],
+          ),
           ),
         );
       },

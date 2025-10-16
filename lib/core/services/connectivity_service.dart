@@ -7,7 +7,6 @@ class ConnectivityService {
   StreamSubscription<ConnectivityResult>? _subscription;
 
   /// Returns a broadcast stream of online/offline status.
-  /// For connectivity_plus >= 6, the stream emits List<ConnectivityResult>.
   Stream<bool> onConnectivityChanged() {
     return _connectivity.onConnectivityChanged.map((results) => _isOnlineFromList(results));
   }
