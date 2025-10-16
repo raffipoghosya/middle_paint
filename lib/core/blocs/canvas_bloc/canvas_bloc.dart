@@ -177,30 +177,21 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   ) async {
     emit(state.copyWith(loading: true, saveMessage: null));
 
-    final result = await _imageSaverService.captureAndShare(
-      event.repaintBoundaryKey,
-      cropRect: event.cropRect,
-      sharePositionOrigin: event.sharePositionOrigin,
-    );
-
-    if (result != null) {
-      final isSuccess = !result.contains('cancelled');
-
-      emit(
-        state.copyWith(
-          loading: false,
-          saveMessage: isSuccess ? 'Изображение готово к отправке!' : null,
-        ),
+    try {
+      await _imageSaverService.captureAndShare(
+        repaintBoundaryKey: event.repaintBoundaryKey,
+        cropRect: event.cropRect,
+        sharePositionOrigin: event.sharePositionOrigin,
       );
-    } else {
+    } catch (e) {
       final errorMessage = 'Не удалось подготовить изображение для отправки.';
       emit(state.copyWith(loading: false, saveMessage: errorMessage));
+    } finally {
+      emit(state.copyWith(loading: false));
     }
   }
 
   /// Handles saving a new or updating an existing artwork.
-  /// This involves: 1. Uploading PNG bytes to Storage. 2. Saving metadata to Firestore.
-  /// 3. Sending a local notification for feedback.
   Future<void> _onSaveArtwork(
     SaveArtworkEvent event,
     Emitter<CanvasState> emit,

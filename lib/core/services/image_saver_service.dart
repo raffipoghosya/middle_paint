@@ -99,8 +99,8 @@ class ImageSaverService {
   }
 
   /// Captures the image, saves it temporarily, and opens the system share dialog.
-  Future<String?> captureAndShare(
-    GlobalKey repaintBoundaryKey, {
+  Future<void> captureAndShare({
+    required GlobalKey repaintBoundaryKey,
     Rect? cropRect,
     required Rect sharePositionOrigin,
   }) async {
@@ -110,7 +110,7 @@ class ImageSaverService {
     );
 
     if (pngBytes == null) {
-      return null;
+      throw Exception('Failed to prepare image for sharing.');
     }
 
     try {
@@ -125,10 +125,8 @@ class ImageSaverService {
         sharePositionOrigin: sharePositionOrigin,
       );
       await SharePlus.instance.share(initialParams);
-
-      return 'Image shared successfully';
     } catch (e) {
-      return 'Sharing process completed or cancelled.';
+      throw Exception('Sharing process failed: $e');
     }
   }
 
