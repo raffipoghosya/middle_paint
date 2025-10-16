@@ -11,10 +11,13 @@ class AppRoutes {
     Widget page,
     RouteSettings settings, {
     bool reverse = false,
+    bool enableSwipeBack = false,
+    Duration transitionDuration = const Duration(milliseconds: 250),
   }) {
     return PageRouteBuilder(
       settings: settings,
       pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionDuration: transitionDuration,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final begin =
             reverse ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
@@ -26,7 +29,25 @@ class AppRoutes {
           end: end,
         ).chain(CurveTween(curve: curve));
 
-        return SlideTransition(position: animation.drive(tween), child: child);
+        final slideTransition = SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+
+        if (enableSwipeBack) {
+          return GestureDetector(
+            onHorizontalDragUpdate: (details) {
+              if (details.primaryDelta! > 0) {
+                if (details.primaryDelta! > 5) {
+                  Navigator.of(context).pop();
+                }
+              }
+            },
+            child: slideTransition,
+          );
+        }
+
+        return slideTransition;
       },
     );
   }
@@ -40,7 +61,12 @@ class AppRoutes {
         return slideTransitionRoute(const SignInScreen(), settings);
 
       case SignUpScreen.name:
-        return slideTransitionRoute(const SignUpScreen(), settings);
+        return slideTransitionRoute(
+          const SignUpScreen(),
+          settings,
+          enableSwipeBack: true,
+          transitionDuration: const Duration(milliseconds: 500),
+        );
 
       case HomeScreen.name:
         return slideTransitionRoute(const HomeScreen(), settings);
