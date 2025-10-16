@@ -42,3 +42,15 @@ class SaveArtworkEvent extends CanvasEvent {
     this.artworkId,
   });
 }
+
+class PickOverlayImageEvent extends CanvasEvent {}
+
+class UpdateOverlayRectEvent extends CanvasEvent {
+  final Rect rect;
+
+  UpdateOverlayRectEvent(this.rect);
+}
+
+class CommitOverlayEvent extends CanvasEvent {}
+
+class CancelOverlayEvent extends CanvasEvent {}

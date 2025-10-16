@@ -171,9 +171,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
     _drawingController.movePathDown();
   }
 
-  void _onGalleryTap() {
+  void _onGalleryTap(bool isEditMode) {
     _hideAllPopups();
-    _canvasBloc.add(PickBackgroundImageEvent());
+    if (isEditMode) {
+      _canvasBloc.add(PickOverlayImageEvent());
+    } else {
+      _canvasBloc.add(PickBackgroundImageEvent());
+    }
   }
 
   void _onPaletteTap() {
@@ -338,6 +342,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   child: ListenableBuilder(
                     listenable: _drawingController,
                     builder: (context, child) {
+                      final bool isPlacingOverlay = canvasState.isPlacingOverlay;
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -352,8 +357,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
                               ),
                               ToolIcon(
                                 assetName: Assets.vectors.gallery,
-                                onTap: _onGalleryTap,
-                                isEnabled: !isScreenEditMode,
+                                onTap: () => _onGalleryTap(isScreenEditMode),
+                                isEnabled: !isPlacingOverlay,
                                 leftPadding: 12.0,
                               ),
                               ToolIcon(
@@ -439,14 +444,30 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 title:
                     isScreenEditMode ? 'Редактирование' : 'Новое изображение',
                 actions: [
-                  GestureDetector(
-                    onTap:
-                        () => _onSaveToCloudTap(
-                          canvasState.artworkIdToEdit ??
-                              widget.artworkToEdit?.id,
+                  if (canvasState.isPlacingOverlay)
+                    GestureDetector(
+                      onTap: () {
+                        context.read<CanvasBloc>().add(CommitOverlayEvent());
+                        _drawingController.setDrawMode();
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        child: Text(
+                          'Сохранить',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: AppColors.neutral50,
+                              ),
                         ),
-                    child: SvgPicture.asset(Assets.vectors.check, width: 24.r),
-                  ),
+                      ),
+                    )
+                  else
+                    GestureDetector(
+                      onTap:
+                          () => _onSaveToCloudTap(
+                            canvasState.artworkIdToEdit ?? widget.artworkToEdit?.id,
+                          ),
+                      child: SvgPicture.asset(Assets.vectors.check, width: 24.r),
+                    ),
                 ],
               ),
             ],

@@ -40,6 +40,10 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     on<ShareImageEvent>(_onShareImage);
     on<SaveArtworkEvent>(_onSaveArtwork);
     on<StartEditArtworkEvent>(_onStartEditArtwork);
+    on<PickOverlayImageEvent>(_onPickOverlayImage);
+    on<UpdateOverlayRectEvent>(_onUpdateOverlayRect);
+    on<CommitOverlayEvent>(_onCommitOverlay);
+    on<CancelOverlayEvent>(_onCancelOverlay);
   }
 
   /// Calculates the natural size of a local image file. Used to correctly scale
@@ -159,6 +163,62 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     } else {
       emit(state.copyWith(loading: false));
     }
+  }
+
+  /// Picks an overlay image for edit mode and enters placement mode.
+  Future<void> _onPickOverlayImage(
+    PickOverlayImageEvent event,
+    Emitter<CanvasState> emit,
+  ) async {
+    final file = await _imagePickerService.pickImageFromGallery();
+    if (file != null) {
+      emit(
+        state.copyWith(
+          overlayImagePath: file.path,
+          overlayRect: null,
+          isPlacingOverlay: true,
+        ),
+      );
+    }
+  }
+
+  void _onUpdateOverlayRect(
+    UpdateOverlayRectEvent event,
+    Emitter<CanvasState> emit,
+  ) {
+    if (state.isPlacingOverlay) {
+      emit(state.copyWith(overlayRect: event.rect));
+    }
+  }
+
+  void _onCommitOverlay(
+    CommitOverlayEvent event,
+    Emitter<CanvasState> emit,
+  ) {
+    if (state.overlayImagePath != null && state.overlayRect != null) {
+      final overlays = List<PlacedOverlay>.from(state.placedOverlays)
+        ..add(PlacedOverlay(
+          imagePath: state.overlayImagePath!,
+          rect: state.overlayRect!,
+        ));
+      emit(
+        state.copyWith(
+          placedOverlays: overlays,
+          overlayImagePath: null,
+          overlayRect: null,
+          isPlacingOverlay: false,
+        ),
+      );
+    } else {
+      emit(state.copyWith(isPlacingOverlay: false, overlayImagePath: null, overlayRect: null));
+    }
+  }
+
+  void _onCancelOverlay(
+    CancelOverlayEvent event,
+    Emitter<CanvasState> emit,
+  ) {
+    emit(state.copyWith(isPlacingOverlay: false, overlayImagePath: null, overlayRect: null));
   }
 
   /// Resets the canvas state by clearing the background image.
