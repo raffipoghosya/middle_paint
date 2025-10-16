@@ -71,36 +71,9 @@ class ImageSaverService {
     }
   }
 
-  /// Captures the image and saves it directly to the device's photo gallery.
-  Future<String?> captureAndSave(
-    GlobalKey repaintBoundaryKey, {
-    Rect? cropRect,
-  }) async {
-    final Uint8List? pngBytes = await capturePngBytes(
-      repaintBoundaryKey,
-      cropRect: cropRect,
-    );
-
-    if (pngBytes == null) {
-      return null;
-    }
-
-    final result = await ImageGallerySaver.saveImage(
-      pngBytes,
-      quality: 100,
-      name: 'middle_paint_${DateTime.now().millisecondsSinceEpoch}',
-    );
-
-    if (result['isSuccess'] == true) {
-      return 'Image saved successfully';
-    } else {
-      return null;
-    }
-  }
-
   /// Captures the image, saves it temporarily, and opens the system share dialog.
-  Future<String?> captureAndShare(
-    GlobalKey repaintBoundaryKey, {
+  Future<void> captureAndShare({
+    required GlobalKey repaintBoundaryKey,
     Rect? cropRect,
     required Rect sharePositionOrigin,
   }) async {
@@ -110,7 +83,7 @@ class ImageSaverService {
     );
 
     if (pngBytes == null) {
-      return null;
+      throw Exception('Failed to prepare image for sharing.');
     }
 
     try {
@@ -125,10 +98,8 @@ class ImageSaverService {
         sharePositionOrigin: sharePositionOrigin,
       );
       await SharePlus.instance.share(initialParams);
-
-      return 'Image shared successfully';
     } catch (e) {
-      return 'Sharing process completed or cancelled.';
+      throw Exception('Sharing process failed: $e');
     }
   }
 

@@ -12,6 +12,8 @@ class CustomTextField extends StatefulWidget {
     this.labelText,
     this.keyboardType,
     this.isPassword = false,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   final FormControl<dynamic> formControl;
@@ -19,6 +21,8 @@ class CustomTextField extends StatefulWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final bool isPassword;
+  final TextInputAction? textInputAction;
+  final ReactiveFormFieldCallback<dynamic>? onSubmitted;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -95,6 +99,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     formControl: widget.formControl,
                     obscureText: _obscureText,
                     keyboardType: widget.keyboardType,
+                    textInputAction: widget.textInputAction,
+                    onSubmitted: widget.onSubmitted,
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.only(bottom: 4.h),
                       isDense: true,

@@ -19,6 +19,9 @@ import 'package:middle_paint/core/services/image_saver_service.dart';
 import 'package:middle_paint/core/injector/injector.dart';
 import 'package:middle_paint/core/firebase_services/authentication.dart';
 import 'package:middle_paint/core/models/artwork_model.dart';
+import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:middle_paint/ui/gallery/home_screen.dart';
 
 class CanvasScreen extends StatefulWidget {
   static const name = '/canvas';
@@ -42,6 +45,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   Rect? _currentDrawingBounds;
   final ImageSaverService _imageSaverService = sl<ImageSaverService>();
   final AuthenticationService _authService = sl<AuthenticationService>();
+  bool _flashOfflineBanner = false;
 
   @override
   void initState() {
@@ -114,8 +118,20 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
   }
 
-  Future<void> _onSaveToCloudTap(String? artworkIdToEdit) async {
+  Future<void> _onSaveToCloudTap(
+    BuildContext tapContext,
+    String? artworkIdToEdit,
+  ) async {
     _hideAllPopups();
+
+    final isOnline = tapContext.read<ConnectivityBloc>().state.isOnline;
+    if (isOnline == false) {
+      setState(() => _flashOfflineBanner = true);
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (mounted) setState(() => _flashOfflineBanner = false);
+      });
+      return;
+    }
 
     if (_authService.currentUser == null) {
       _showSaveSnackBar(
@@ -143,7 +159,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
         pngBytes: pngBytes,
         cropRect: _currentDrawingBounds,
         onSuccess: () {
-          Navigator.of(context).pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(HomeScreen.name);
+          }
         },
         onError: (message) {},
         artworkId: artworkIdToEdit,
@@ -171,9 +191,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
     _drawingController.movePathDown();
   }
 
-  void _onGalleryTap() {
+  void _onGalleryTap(bool isEditMode) {
     _hideAllPopups();
-    _canvasBloc.add(PickBackgroundImageEvent());
+    if (isEditMode) {
+      _canvasBloc.add(PickOverlayImageEvent());
+    } else {
+      _canvasBloc.add(PickBackgroundImageEvent());
+    }
   }
 
   void _onPaletteTap() {
@@ -311,145 +335,213 @@ class _CanvasScreenState extends State<CanvasScreen> {
       builder: (context, canvasState) {
         final bool isScreenEditMode = widget.artworkToEdit != null;
 
-        return Scaffold(
-          backgroundColor: AppColors.primaryBlack,
-          body: Stack(
-            children: [
-              const CustomBackground(child: SizedBox.expand()),
+        return BlocProvider(
+          create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
+          child: Scaffold(
+            backgroundColor: AppColors.primaryBlack,
+            body: Stack(
+              children: [
+                const CustomBackground(child: SizedBox.expand()),
 
-              DrawingArea(
-                appBarHeight: appBarHeight,
-                controller: _drawingController,
-                backgroundImagePath: canvasState.backgroundImagePath,
-                imageNaturalSize: canvasState.imageNaturalSize,
-                repaintBoundaryKey: _repaintBoundaryKey,
-                onBoundsCalculated: _onDrawingBoundsCalculated,
-              ),
-
-              Positioned(
-                top: appBarHeight,
-                left: 0,
-                right: 0,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 24.h,
-                  ),
-                  child: ListenableBuilder(
-                    listenable: _drawingController,
-                    builder: (context, child) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ToolIcon(
-                                key: _shareIconKey, // Assign the key
-                                assetName: Assets.vectors.download,
-                                onTap: _onShareImageTap,
-                                leftPadding: 0.0,
-                              ),
-                              ToolIcon(
-                                assetName: Assets.vectors.gallery,
-                                onTap: _onGalleryTap,
-                                isEnabled: !isScreenEditMode,
-                                leftPadding: 12.0,
-                              ),
-                              ToolIcon(
-                                assetName: Assets.vectors.pencil,
-                                onTap: _onPencilTap,
-                                color: pencilIconColor,
-                                leftPadding: 12.0,
-                              ),
-                              ToolIcon(
-                                assetName: Assets.vectors.eraser,
-                                onTap: _onEraserTap,
-                                color: eraserIconColor,
-                                leftPadding: 12.0,
-                              ),
-                              ToolIcon(
-                                assetName: Assets.vectors.palette,
-                                onTap: _onPaletteTap,
-                                color: paletteIconColor,
-                                leftPadding: 12.0,
-                              ),
-                            ],
+                Positioned(
+                  top: appBarHeight,
+                  left: 0,
+                  right: 0,
+                  child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                    builder: (context, netState) {
+                      if (netState.isOnline == false) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
                           ),
-                        ],
-                      );
+                          color:
+                              _flashOfflineBanner
+                                  ? AppColors.error200.withValues(alpha: 0.5)
+                                  : AppColors.error200.withValues(alpha: 0.2),
+                          child: Text(
+                            'Нет подключения к Интернету',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.primary50),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
                     },
                   ),
                 ),
-              ),
 
-              if (_showStrokeSlider)
-                StrokeWidthSliderPopup(
-                  initialValue: _drawingController.currentStrokeWidth,
-                  onChanged: _onStrokeWidthChanged,
-                  onTapOutside: _onTapOutsidePopup,
+                DrawingArea(
+                  appBarHeight: appBarHeight,
+                  controller: _drawingController,
+                  backgroundImagePath: canvasState.backgroundImagePath,
+                  imageNaturalSize: canvasState.imageNaturalSize,
+                  repaintBoundaryKey: _repaintBoundaryKey,
+                  onBoundsCalculated: _onDrawingBoundsCalculated,
                 ),
 
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child:
-                    _showColorPalette
-                        ? ListenableBuilder(
-                          key: const ValueKey('ColorPickerPopup'),
-                          listenable: _drawingController,
-                          builder: (context, child) {
-                            return ColorPickerPopup(
-                              initialColor: _drawingController.currentColor,
-                              onColorChanged: _onColorChanged,
-                              onTapOutside: _onTapOutsidePopup,
-                            );
-                          },
-                        )
-                        : const SizedBox.shrink(key: ValueKey('Empty')),
-              ),
-
-              _buildLayerControls(),
-
-              if (canvasState.loading)
-                Positioned.fill(
-                  child: Container(
-                    color: AppColors.primaryBlack.withValues(alpha: 0.6),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.magenta,
-                      ),
+                Positioned(
+                  top: appBarHeight,
+                  left: 0,
+                  right: 0,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 24.h,
+                    ),
+                    child: ListenableBuilder(
+                      listenable: _drawingController,
+                      builder: (context, child) {
+                        final bool isPlacingOverlay =
+                            canvasState.isPlacingOverlay;
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ToolIcon(
+                                  key: _shareIconKey,
+                                  assetName: Assets.vectors.download,
+                                  onTap: _onShareImageTap,
+                                  leftPadding: 0.0,
+                                ),
+                                ToolIcon(
+                                  assetName: Assets.vectors.gallery,
+                                  onTap: () => _onGalleryTap(isScreenEditMode),
+                                  isEnabled: !isPlacingOverlay,
+                                  leftPadding: 12.0,
+                                ),
+                                ToolIcon(
+                                  assetName: Assets.vectors.pencil,
+                                  onTap: _onPencilTap,
+                                  color: pencilIconColor,
+                                  leftPadding: 12.0,
+                                ),
+                                ToolIcon(
+                                  assetName: Assets.vectors.eraser,
+                                  onTap: _onEraserTap,
+                                  color: eraserIconColor,
+                                  leftPadding: 12.0,
+                                ),
+                                ToolIcon(
+                                  assetName: Assets.vectors.palette,
+                                  onTap: _onPaletteTap,
+                                  color: paletteIconColor,
+                                  leftPadding: 12.0,
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
 
-              CustomAppBar(
-                leading: GestureDetector(
-                  onTap: () {
-                    context.read<CanvasBloc>().add(ClearBackgroundImageEvent());
-                    Navigator.of(context).pop();
+                if (_showStrokeSlider)
+                  StrokeWidthSliderPopup(
+                    initialValue: _drawingController.currentStrokeWidth,
+                    onChanged: _onStrokeWidthChanged,
+                    onTapOutside: _onTapOutsidePopup,
+                  ),
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (
+                    Widget child,
+                    Animation<double> animation,
+                  ) {
+                    return FadeTransition(opacity: animation, child: child);
                   },
-                  child: SvgPicture.asset(
-                    Assets.vectors.arrowLeft,
-                    width: 24.r,
-                  ),
+                  child:
+                      _showColorPalette
+                          ? ListenableBuilder(
+                            key: const ValueKey('ColorPickerPopup'),
+                            listenable: _drawingController,
+                            builder: (context, child) {
+                              return ColorPickerPopup(
+                                initialColor: _drawingController.currentColor,
+                                onColorChanged: _onColorChanged,
+                                onTapOutside: _onTapOutsidePopup,
+                              );
+                            },
+                          )
+                          : const SizedBox.shrink(key: ValueKey('Empty')),
                 ),
-                title:
-                    isScreenEditMode ? 'Редактирование' : 'Новое изображение',
-                actions: [
-                  GestureDetector(
-                    onTap:
-                        () => _onSaveToCloudTap(
-                          canvasState.artworkIdToEdit ??
-                              widget.artworkToEdit?.id,
+
+                _buildLayerControls(),
+
+                if (canvasState.loading)
+                  Positioned.fill(
+                    child: Container(
+                      color: AppColors.primaryBlack.withValues(alpha: 0.6),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.magenta,
                         ),
-                    child: SvgPicture.asset(Assets.vectors.check, width: 24.r),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ],
+
+                CustomAppBar(
+                  leading: GestureDetector(
+                    onTap: () {
+                      context.read<CanvasBloc>().add(
+                        ClearBackgroundImageEvent(),
+                      );
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(HomeScreen.name);
+                      }
+                    },
+                    child: SvgPicture.asset(
+                      Assets.vectors.arrowLeft,
+                      width: 24.r,
+                    ),
+                  ),
+                  title:
+                      isScreenEditMode ? 'Редактирование' : 'Новое изображение',
+                  actions: [
+                    if (canvasState.isPlacingOverlay)
+                      GestureDetector(
+                        onTap: () {
+                          context.read<CanvasBloc>().add(CommitOverlayEvent());
+                          _drawingController.setDrawMode();
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: Text(
+                            'Сохранить',
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(color: AppColors.neutral50),
+                          ),
+                        ),
+                      )
+                    else
+                      Builder(
+                        builder: (builderContext) {
+                          return GestureDetector(
+                            onTap:
+                                () => _onSaveToCloudTap(
+                                  builderContext,
+                                  canvasState.artworkIdToEdit ??
+                                      widget.artworkToEdit?.id,
+                                ),
+                            child: SvgPicture.asset(
+                              Assets.vectors.check,
+                              width: 24.r,
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

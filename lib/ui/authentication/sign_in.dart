@@ -14,6 +14,7 @@ import 'package:middle_paint/ui/widgets/background/custom_background.dart';
 import 'package:middle_paint/ui/widgets/fields/custom_text_field.dart';
 import 'package:middle_paint/ui/widgets/spaces/bottom_padding.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:go_router/go_router.dart';
 
 class SignInScreen extends StatefulWidget {
   static const name = '/signIn';
@@ -44,9 +45,7 @@ class _SignInScreenState extends State<SignInScreen> {
     signInBloc.add(
       SignInWithEmailEvent(
         onSuccess: () {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(HomeScreen.name, (route) => false);
+          context.go(HomeScreen.name);
         },
         onError: (errorMessage) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +94,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: 'Введите электронную почту',
                                 keyboardType: TextInputType.emailAddress,
                                 formControl: signInForm.emailControl,
+                                textInputAction: TextInputAction.next,
                               ),
                               SizedBox(height: 20.h),
                               CustomTextField(
@@ -102,6 +102,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: 'Введите пароль',
                                 isPassword: true,
                                 formControl: signInForm.passwordControl,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _onSignInTap(state),
                               ),
                             ],
                           ),
@@ -122,7 +124,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     MainButton(
                       onTap: () {
                         signInBloc.state.signInForm.clear();
-                        Navigator.pushNamed(context, SignUpScreen.name);
+                        context.push(SignUpScreen.name);
                       },
                       buttonText: 'Регистрация',
                       textColor: AppColors.primaryBlack,

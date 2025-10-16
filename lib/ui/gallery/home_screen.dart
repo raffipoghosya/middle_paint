@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:middle_paint/core/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:middle_paint/core/blocs/sign_in_bloc/sign_in_event.dart';
-import 'package:middle_paint/core/routes/routes.dart';
 import 'package:middle_paint/gen/assets.gen.dart';
 import 'package:middle_paint/ui/authentication/sign_in.dart';
 import 'package:middle_paint/ui/widgets/app_bar.dart/custom_app_bar.dart';
@@ -20,6 +19,9 @@ import 'package:middle_paint/ui/widgets/artwork/artwork_grid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:middle_paint/core/blocs/artwork_bloc/artwork_state.dart';
 import 'package:middle_paint/ui/widgets/dialogs/log_out_confirmation_dialog.dart';
+import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:middle_paint/core/injector/injector.dart';
 
 class HomeScreen extends StatefulWidget {
   static const name = '/home';
@@ -30,6 +32,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _flashOfflineBanner = false;
   @override
   void initState() {
     super.initState();
@@ -48,14 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<SignInBloc>().add(
           LogOutEvent(
             onSuccess: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                AppRoutes.slideTransitionRoute(
-                  const SignInScreen(),
-                  const RouteSettings(name: SignInScreen.name),
-                  reverse: true,
-                ),
-                (route) => false,
-              );
+              context.go(SignInScreen.name);
             },
           ),
         );
@@ -64,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onCreateTap() {
-    Navigator.of(context).pushNamed(CanvasScreen.name);
+    context.push(CanvasScreen.name);
   }
 
   @override
@@ -95,50 +91,98 @@ class _HomeScreenState extends State<HomeScreen> {
           ];
         }
 
-        return Scaffold(
-          backgroundColor: AppColors.primaryBlack,
-          body: Stack(
-            children: [
-              CustomBackground(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.0.w),
-                  child: Column(
-                    children: [
-                      SizedBox(height: topPadding + AppConstants.contentHeight),
-
-                      Expanded(child: ArtworkGrid()),
-
-                      if (showBottomButton)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            MainButton(
-                              onTap: _onCreateTap,
-                              buttonText: 'Создать',
-                              textColor: AppColors.neutral50,
-                              buttonColors: [
-                                AppColors.magenta,
-                                AppColors.purple,
-                              ],
-                            ),
-
-                            const BottomPadding(),
-                          ],
+        return BlocProvider(
+          create: (_) => sl<ConnectivityBloc>()..add(ConnectivityStarted()),
+          child: Scaffold(
+            backgroundColor: AppColors.primaryBlack,
+            body: Stack(
+              children: [
+                CustomBackground(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.0.w),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: topPadding + AppConstants.contentHeight,
                         ),
-                    ],
+
+                        Expanded(
+                          child: ArtworkGrid(
+                            onOfflineTap: () {
+                              setState(() => _flashOfflineBanner = true);
+                              Future.delayed(
+                                const Duration(milliseconds: 900),
+                                () {
+                                  if (mounted)
+                                    setState(() => _flashOfflineBanner = false);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+
+                        if (showBottomButton)
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              MainButton(
+                                onTap: _onCreateTap,
+                                buttonText: 'Создать',
+                                textColor: AppColors.neutral50,
+                                buttonColors: [
+                                  AppColors.magenta,
+                                  AppColors.purple,
+                                ],
+                              ),
+
+                              const BottomPadding(),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              CustomAppBar(
-                leading: GestureDetector(
-                  onTap: () => _onLogOutTap(context),
-                  child: SvgPicture.asset(Assets.vectors.logout, width: 24.r),
+                Positioned(
+                  top: topPadding + AppConstants.contentHeight,
+                  left: 0,
+                  right: 0,
+                  child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
+                    builder: (context, netState) {
+                      if (netState.isOnline == false) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24.w,
+                            vertical: 8.h,
+                          ),
+                          color:
+                              _flashOfflineBanner
+                                  ? AppColors.error200.withValues(alpha: 0.5)
+                                  : AppColors.error200.withValues(alpha: 0.2),
+                          child: Text(
+                            'Нет подключения к Интернету',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.primary50),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ),
-                title: 'Галерея',
-                actions: appBarActions,
-              ),
-            ],
+
+                CustomAppBar(
+                  leading: GestureDetector(
+                    onTap: () => _onLogOutTap(context),
+                    child: SvgPicture.asset(Assets.vectors.logout, width: 24.r),
+                  ),
+                  title: 'Галерея',
+                  actions: appBarActions,
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -12,6 +12,7 @@ import 'package:middle_paint/ui/widgets/background/custom_background.dart';
 import 'package:middle_paint/ui/widgets/fields/custom_text_field.dart';
 import 'package:middle_paint/ui/widgets/spaces/bottom_padding.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const name = '/signUp';
@@ -37,9 +38,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     signUpBloc.add(
       SignUpWithEmailEvent(
         onSuccess: () {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(HomeScreen.name, (route) => false);
+          signUpBloc.state.signUpForm.clear();
+          context.go(HomeScreen.name);
         },
         onError: (errorMessage) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -59,83 +59,101 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
+  void dispose() {
+    signUpBloc.state.signUpForm.clear();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primaryBlack,
-      body: CustomBackground(
-        child: BlocBuilder<SignUpBloc, SignUpState>(
-          builder: (context, state) {
-            final formGroup = state.signUpForm.formGroup;
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.0.w),
-              child: ReactiveForm(
-                formGroup: formGroup,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AuthTitle('Регистрация'),
-                              SizedBox(height: 20.h),
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (details.primaryDelta != null && details.primaryDelta! > 12) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.primaryBlack,
+        body: CustomBackground(
+          child: BlocBuilder<SignUpBloc, SignUpState>(
+            builder: (context, state) {
+              final formGroup = state.signUpForm.formGroup;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0.w),
+                child: ReactiveForm(
+                  formGroup: formGroup,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AuthTitle('Регистрация'),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'Имя',
-                                hintText: 'Введите ваше имя',
-                                formControl: state.signUpForm.nameControl,
-                              ),
-                              SizedBox(height: 20.h),
+                                CustomTextField(
+                                  labelText: 'Имя',
+                                  hintText: 'Введите ваше имя',
+                                  formControl: state.signUpForm.nameControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'e-mail',
-                                hintText: 'Ваша электронная почта',
-                                keyboardType: TextInputType.emailAddress,
-                                formControl: state.signUpForm.emailControl,
-                              ),
-                              SizedBox(height: 40.h),
+                                CustomTextField(
+                                  labelText: 'e-mail',
+                                  hintText: 'Ваша электронная почта',
+                                  keyboardType: TextInputType.emailAddress,
+                                  formControl: state.signUpForm.emailControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 40.h),
 
-                              CustomTextField(
-                                labelText: 'Пароль',
-                                hintText: '6-16 символов',
-                                isPassword: true,
-                                formControl: state.signUpForm.passwordControl,
-                              ),
-                              SizedBox(height: 20.h),
+                                CustomTextField(
+                                  labelText: 'Пароль',
+                                  hintText: '6-16 символов',
+                                  isPassword: true,
+                                  formControl: state.signUpForm.passwordControl,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                SizedBox(height: 20.h),
 
-                              CustomTextField(
-                                labelText: 'Подтверждение пароля',
-                                hintText: '6-16 символов',
-                                isPassword: true,
-                                formControl:
-                                    state.signUpForm.confirmPasswordControl,
-                              ),
-                              SizedBox(height: 20.h),
-                            ],
+                                CustomTextField(
+                                  labelText: 'Подтверждение пароля',
+                                  hintText: '6-16 символов',
+                                  isPassword: true,
+                                  formControl:
+                                      state.signUpForm.confirmPasswordControl,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _onSignUpTap(state),
+                                ),
+                                SizedBox(height: 20.h),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    ReactiveFormConsumer(
-                      builder: (context, form, child) {
-                        return AuthButton(
-                          disabled: !form.valid || state.loading,
-                          loading: state.loading,
-                          buttonName: 'Зарегистрироваться',
-                          onTap: () => _onSignUpTap(state),
-                        );
-                      },
-                    ),
+                      ReactiveFormConsumer(
+                        builder: (context, form, child) {
+                          return AuthButton(
+                            disabled: !form.valid || state.loading,
+                            loading: state.loading,
+                            buttonName: 'Зарегистрироваться',
+                            onTap: () => _onSignUpTap(state),
+                          );
+                        },
+                      ),
 
-                    BottomPadding(),
-                  ],
+                      BottomPadding(),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

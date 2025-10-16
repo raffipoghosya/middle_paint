@@ -8,7 +8,9 @@ import 'package:middle_paint/ui/widgets/artwork/artwork_grid_item.dart';
 import 'package:middle_paint/base/ui_helpers/detect_device_type.dart';
 
 class ArtworkGrid extends StatelessWidget {
-  const ArtworkGrid({super.key});
+  final VoidCallback? onOfflineTap;
+
+  const ArtworkGrid({super.key, this.onOfflineTap});
 
   int _getCrossAxisCount(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -61,7 +63,10 @@ class ArtworkGrid extends StatelessWidget {
           itemCount: state.artworks.length,
           itemBuilder: (context, index) {
             final artwork = state.artworks[index];
-            return ArtworkGridItem(artwork: artwork);
+            return ArtworkGridItem(
+              artwork: artwork,
+              onOfflineTap: onOfflineTap,
+            );
           },
         );
       },

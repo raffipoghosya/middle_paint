@@ -11,11 +11,15 @@ import 'package:middle_paint/ui/canvas/canvas_screen.dart';
 import 'package:middle_paint/ui/widgets/dialogs/delete_artwork_confirmation_dialog.dart';
 import 'package:middle_paint/ui/widgets/dialogs/rename_artwork_dialog.dart';
 import 'package:pull_down_button/pull_down_button.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:middle_paint/core/blocs/connectivity_bloc/connectivity_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class ArtworkGridItem extends StatefulWidget {
   final ArtworkModel artwork;
+  final VoidCallback? onOfflineTap;
 
-  const ArtworkGridItem({super.key, required this.artwork});
+  const ArtworkGridItem({super.key, required this.artwork, this.onOfflineTap});
 
   @override
   State<ArtworkGridItem> createState() => _ArtworkGridItemState();
@@ -203,9 +207,12 @@ class _ArtworkGridItemState extends State<ArtworkGridItem> {
 
               return GestureDetector(
                 onTap: () {
-                  Navigator.of(
-                    context,
-                  ).pushNamed(CanvasScreen.name, arguments: widget.artwork);
+                  final netState = context.read<ConnectivityBloc>().state;
+                  if (netState.isOnline == false) {
+                    widget.onOfflineTap?.call();
+                    return;
+                  }
+                  context.push(CanvasScreen.name, extra: widget.artwork);
                 },
                 onLongPress: openMenu,
                 child: _buildItemContent(context, isMenuOpen),

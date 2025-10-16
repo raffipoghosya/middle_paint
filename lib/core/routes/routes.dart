@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:middle_paint/ui/authentication/sign_in.dart';
 import 'package:middle_paint/ui/authentication/sign_up.dart';
 import 'package:middle_paint/ui/splash/splash_screen.dart';
@@ -7,62 +8,75 @@ import 'package:middle_paint/ui/canvas/canvas_screen.dart';
 import 'package:middle_paint/core/models/artwork_model.dart';
 
 class AppRoutes {
-  static Route<dynamic> slideTransitionRoute(
-    Widget page,
-    RouteSettings settings, {
-    bool reverse = false,
+  static final GoRouter router = GoRouter(
+    initialLocation: SplashScreen.name,
+    routes: <RouteBase>[
+      GoRoute(
+        path: SplashScreen.name,
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SplashScreen(),
+            ),
+      ),
+      GoRoute(
+        path: SignInScreen.name,
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SignInScreen(),
+            ),
+      ),
+      GoRoute(
+        path: SignUpScreen.name,
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const SignUpScreen(),
+              durationMs: 500,
+            ),
+      ),
+      GoRoute(
+        path: HomeScreen.name,
+        pageBuilder:
+            (context, state) => _slideTransitionPage(
+              key: state.pageKey,
+              child: const HomeScreen(),
+            ),
+      ),
+      GoRoute(
+        path: CanvasScreen.name,
+        pageBuilder: (context, state) {
+          final Object? extra = state.extra;
+          ArtworkModel? artworkToEdit;
+          if (extra is ArtworkModel) {
+            artworkToEdit = extra;
+          }
+          return _slideTransitionPage(
+            key: state.pageKey,
+            child: CanvasScreen(artworkToEdit: artworkToEdit),
+          );
+        },
+      ),
+    ],
+  );
+
+  static CustomTransitionPage _slideTransitionPage({
+    required LocalKey key,
+    required Widget child,
+    int durationMs = 250,
   }) {
-    return PageRouteBuilder(
-      settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
+    return CustomTransitionPage(
+      key: key,
+      child: child,
+      transitionDuration: Duration(milliseconds: durationMs),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        final begin =
-            reverse ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
-        const end = Offset.zero;
-        const curve = Curves.easeInOut;
-
-        var tween = Tween(
-          begin: begin,
-          end: end,
-        ).chain(CurveTween(curve: curve));
-
+        final tween = Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeInOut));
         return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
-  }
-
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case SplashScreen.name:
-        return slideTransitionRoute(const SplashScreen(), settings);
-
-      case SignInScreen.name:
-        return slideTransitionRoute(const SignInScreen(), settings);
-
-      case SignUpScreen.name:
-        return slideTransitionRoute(const SignUpScreen(), settings);
-
-      case HomeScreen.name:
-        return slideTransitionRoute(const HomeScreen(), settings);
-
-      case CanvasScreen.name:
-        final arguments = settings.arguments;
-        ArtworkModel? artworkToEdit;
-
-        if (arguments is ArtworkModel) {
-          artworkToEdit = arguments;
-        }
-
-        return slideTransitionRoute(
-          CanvasScreen(artworkToEdit: artworkToEdit),
-          settings,
-        );
-
-      default:
-        return MaterialPageRoute(
-          builder: (_) => const SplashScreen(),
-          settings: settings,
-        );
-    }
   }
 }

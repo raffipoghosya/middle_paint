@@ -40,6 +40,10 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     on<ShareImageEvent>(_onShareImage);
     on<SaveArtworkEvent>(_onSaveArtwork);
     on<StartEditArtworkEvent>(_onStartEditArtwork);
+    on<PickOverlayImageEvent>(_onPickOverlayImage);
+    on<UpdateOverlayRectEvent>(_onUpdateOverlayRect);
+    on<CommitOverlayEvent>(_onCommitOverlay);
+    on<CancelOverlayEvent>(_onCancelOverlay);
   }
 
   /// Calculates the natural size of a local image file. Used to correctly scale
@@ -161,6 +165,69 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     }
   }
 
+  /// Picks an overlay image for edit mode and enters placement mode.
+  Future<void> _onPickOverlayImage(
+    PickOverlayImageEvent event,
+    Emitter<CanvasState> emit,
+  ) async {
+    final file = await _imagePickerService.pickImageFromGallery();
+    if (file != null) {
+      emit(
+        state.copyWith(
+          overlayImagePath: file.path,
+          overlayRect: null,
+          isPlacingOverlay: true,
+        ),
+      );
+    }
+  }
+
+  void _onUpdateOverlayRect(
+    UpdateOverlayRectEvent event,
+    Emitter<CanvasState> emit,
+  ) {
+    if (state.isPlacingOverlay) {
+      emit(state.copyWith(overlayRect: event.rect));
+    }
+  }
+
+  void _onCommitOverlay(CommitOverlayEvent event, Emitter<CanvasState> emit) {
+    if (state.overlayImagePath != null && state.overlayRect != null) {
+      final overlays = List<PlacedOverlay>.from(state.placedOverlays)..add(
+        PlacedOverlay(
+          imagePath: state.overlayImagePath!,
+          rect: state.overlayRect!,
+        ),
+      );
+      emit(
+        state.copyWith(
+          placedOverlays: overlays,
+          overlayImagePath: null,
+          overlayRect: null,
+          isPlacingOverlay: false,
+        ),
+      );
+    } else {
+      emit(
+        state.copyWith(
+          isPlacingOverlay: false,
+          overlayImagePath: null,
+          overlayRect: null,
+        ),
+      );
+    }
+  }
+
+  void _onCancelOverlay(CancelOverlayEvent event, Emitter<CanvasState> emit) {
+    emit(
+      state.copyWith(
+        isPlacingOverlay: false,
+        overlayImagePath: null,
+        overlayRect: null,
+      ),
+    );
+  }
+
   /// Resets the canvas state by clearing the background image.
   void _onClearBackgroundImage(
     ClearBackgroundImageEvent event,
@@ -177,30 +244,21 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   ) async {
     emit(state.copyWith(loading: true, saveMessage: null));
 
-    final result = await _imageSaverService.captureAndShare(
-      event.repaintBoundaryKey,
-      cropRect: event.cropRect,
-      sharePositionOrigin: event.sharePositionOrigin,
-    );
-
-    if (result != null) {
-      final isSuccess = !result.contains('cancelled');
-
-      emit(
-        state.copyWith(
-          loading: false,
-          saveMessage: isSuccess ? 'Изображение готово к отправке!' : null,
-        ),
+    try {
+      await _imageSaverService.captureAndShare(
+        repaintBoundaryKey: event.repaintBoundaryKey,
+        cropRect: event.cropRect,
+        sharePositionOrigin: event.sharePositionOrigin,
       );
-    } else {
+    } catch (e) {
       final errorMessage = 'Не удалось подготовить изображение для отправки.';
       emit(state.copyWith(loading: false, saveMessage: errorMessage));
+    } finally {
+      emit(state.copyWith(loading: false));
     }
   }
 
   /// Handles saving a new or updating an existing artwork.
-  /// This involves: 1. Uploading PNG bytes to Storage. 2. Saving metadata to Firestore.
-  /// 3. Sending a local notification for feedback.
   Future<void> _onSaveArtwork(
     SaveArtworkEvent event,
     Emitter<CanvasState> emit,
