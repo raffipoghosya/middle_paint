@@ -285,63 +285,98 @@ class _OverlayPlacement extends StatefulWidget {
 
 class _OverlayPlacementState extends State<_OverlayPlacement> {
   late Rect _rect;
-  Offset? _dragStart;
   Rect? _startRect;
+  Offset? _startFocal;
+  Size? _naturalSize;
 
   @override
   void initState() {
     super.initState();
     _rect = widget.rect;
+    _resolveImageSize();
+  }
+
+  void _resolveImageSize() {
+    final imageProvider = Image.file(File(widget.imagePath)).image;
+    final stream = imageProvider.resolve(ImageConfiguration.empty);
+    ImageStreamListener? listener;
+    listener = ImageStreamListener((ImageInfo info, bool _) {
+      _naturalSize = Size(
+        info.image.width.toDouble(),
+        info.image.height.toDouble(),
+      );
+      setState(() {});
+      stream.removeListener(listener!);
+    }, onError: (dynamic _, __) {
+      if (listener != null) {
+        stream.removeListener(listener!);
+      }
+    });
+    stream.addListener(listener);
+  }
+
+  double get _imageAspect {
+    if (_naturalSize == null || _naturalSize!.width == 0 || _naturalSize!.height == 0) {
+      return _rect.width / _rect.height;
+    }
+    return _naturalSize!.width / _naturalSize!.height;
+  }
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _startRect = _rect;
+    _startFocal = details.focalPoint;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (_startRect == null || _startFocal == null) return;
+
+    final Offset focalDelta = details.focalPoint - _startFocal!;
+    Offset newCenter = _startRect!.center + focalDelta;
+
+    final double aspect = _imageAspect; // width/height
+    double newWidth = (_startRect!.width * details.scale).clamp(60.0, widget.bounds.width);
+    double newHeight = newWidth / aspect;
+
+    Rect candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+
+    if (candidate.left < widget.bounds.left) {
+      newCenter = Offset(widget.bounds.left + candidate.width / 2, newCenter.dy);
+    }
+    if (candidate.top < widget.bounds.top) {
+      newCenter = Offset(newCenter.dx, widget.bounds.top + candidate.height / 2);
+    }
+    if (candidate.right > widget.bounds.right) {
+      newCenter = Offset(widget.bounds.right - candidate.width / 2, newCenter.dy);
+    }
+    if (candidate.bottom > widget.bounds.bottom) {
+      newCenter = Offset(newCenter.dx, widget.bounds.bottom - candidate.height / 2);
+    }
+
+    candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+
+    double overflowScaleW = 1.0;
+    double overflowScaleH = 1.0;
+    if (candidate.width > widget.bounds.width) {
+      overflowScaleW = widget.bounds.width / candidate.width;
+    }
+    if (candidate.height > widget.bounds.height) {
+      overflowScaleH = widget.bounds.height / candidate.height;
+    }
+    final double overflowScale = overflowScaleW < overflowScaleH ? overflowScaleW : overflowScaleH;
+    if (overflowScale < 1.0) {
+      newWidth = candidate.width * overflowScale;
+      newHeight = candidate.height * overflowScale;
+      candidate = Rect.fromCenter(center: newCenter, width: newWidth, height: newHeight);
+    }
+
+    setState(() => _rect = candidate);
+    _notify();
   }
 
   void _notify() {
     widget.onRectChanged(_rect);
   }
 
-  void _onDragStart(DragStartDetails details) {
-    _dragStart = details.globalPosition;
-    _startRect = _rect;
-  }
-
-  void _onDragUpdate(DragUpdateDetails details) {
-    if (_dragStart == null || _startRect == null) return;
-    final delta = details.globalPosition - _dragStart!;
-    Rect next = _startRect!.shift(delta);
-    if (next.left < widget.bounds.left) {
-      next = next.shift(Offset(widget.bounds.left - next.left, 0));
-    }
-    if (next.top < widget.bounds.top) {
-      next = next.shift(Offset(0, widget.bounds.top - next.top));
-    }
-    if (next.right > widget.bounds.right) {
-      next = next.shift(Offset(widget.bounds.right - next.right, 0));
-    }
-    if (next.bottom > widget.bounds.bottom) {
-      next = next.shift(Offset(0, widget.bounds.bottom - next.bottom));
-    }
-    setState(() => _rect = next);
-    _notify();
-  }
-
-  void _onResizeDrag(DragUpdateDetails details) {
-    final Size minSize = Size(40, 40);
-    double newWidth = (_rect.width + details.delta.dx).clamp(minSize.width, widget.bounds.width);
-    double aspect = _rect.height / _rect.width;
-    double newHeight = newWidth * aspect;
-    Rect next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
-    if (next.right > widget.bounds.right) {
-      newWidth = widget.bounds.right - _rect.left;
-      newHeight = newWidth * aspect;
-      next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
-    }
-    if (next.bottom > widget.bounds.bottom) {
-      newHeight = widget.bounds.bottom - _rect.top;
-      newWidth = newHeight / aspect;
-      next = Rect.fromLTWH(_rect.left, _rect.top, newWidth, newHeight);
-    }
-    setState(() => _rect = next);
-    _notify();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -354,36 +389,15 @@ class _OverlayPlacementState extends State<_OverlayPlacement> {
         clipBehavior: Clip.none,
         children: [
           GestureDetector(
-            onPanStart: _onDragStart,
-            onPanUpdate: _onDragUpdate,
+            onScaleStart: _onScaleStart,
+            onScaleUpdate: _onScaleUpdate,
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(color: AppColors.purple, width: 1.5),
               ),
               child: Image.file(
                 File(widget.imagePath),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-
-          Positioned(
-            right: -12,
-            bottom: -12,
-            child: GestureDetector(
-              onPanUpdate: _onResizeDrag,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.purple,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(
-                  Icons.open_in_full,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                fit: BoxFit.fill,
               ),
             ),
           ),
